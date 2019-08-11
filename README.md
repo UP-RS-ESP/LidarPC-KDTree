@@ -21,7 +21,7 @@ We use the following algorithms:
 | pyflann | [github](https://github.com/primetang/pyflann) | pyflann is the python bindings for [FLANN - Fast Library for Approximate Nearest Neighbors](http://www.cs.ubc.ca/research/flann/). *Multi-core CPU processing.* |
 | cyflann | [github](https://github.com/dougalsutherland/cyflann) | cyflann is the a cythin interface for [FLANN - Fast Library for Approximate Nearest Neighbors](http://www.cs.ubc.ca/research/flann/). *Multi-core CPU processing.* |
 | kNN-CUDA | ??? | GPU implementaiton of knn
-
+| cuml | [github](https://github.com/rapidsai/cuml) | cuML - GPU Machine Learning Algorithms, [examples](https://github.com/rapidsai/notebooks/tree/master/cuml), [knn example](https://github.com/rapidsai/notebooks/blob/master/cuml/knn_demo.ipynb)
 
 # Test datasets
 ## Airborne Lidar data from Santa Cruz Island, California
@@ -46,8 +46,30 @@ A first test using various algorithms is shown in the table below. Note that the
   |  pyflannKDTree |  0.78 | 0.59 |  0.86 |  4.33 |
   |  cyflannKDTree |  0.83 | 0.59 |  0.91 |  3.53 |
 
-  
-# Implementation
+
+# Installation
+## Prerequisites
 Before running, ensure that you have an up-to-date Python environment. For the sake of compatibility and comparability, we rely on the following `conda` environment. We realize that timing may change in the future, if versions are updated, but the order-of-magnitude comparison should still hold. All tests have been performed in Ubuntu 18.04, but other systems (including Mac OS X and Windows) should work equally well. Note that CUDA implementation on Mac OS X may be limited.
 
+You will need to have a working CUDA environment. Currently, we achieve the best results with CUDA 9.2, but likely will switch to CUDA 10.x soon. Find out about your CUDA version with `nvidia-smi` or `nvcc --version`. Please see relevant webpages to get your proper NVIDIA driver and CUDA compilation tools running.
+
 Install your `conda` environment (we rely on [miniconda](https://docs.conda.io/en/latest/miniconda.html), see also a [blog](https://bodobookhagen.github.io/posts/2018/12/conda-install/) entry):
+
+```bash
+conda create -y -n PC_py36 -c anaconda -c conda-forge ipython spyder python=3 \
+  gdal=3 numpy scipy dask h5py pandas pytables hdf5 cython matplotlib tabulate \
+  scikit-learn pyflann cyflann
+conda activate PC_py3
+pip install laspy
+conda install -y -c nvidia -c rapidsai -c numba -c conda-forge -c pytorch \
+  -c defaults cudf=0.8 cuml=0.8 cugraph=0.8 python=3.6 cudatoolkit=9.2
+```
+
+Alternatively, you can create a separate environment for CUDA processing, if you plan to do only GPU/CUDA processing:
+```bash
+conda create -y -n PC_py36_cuda -c nvidia -c rapidsai -c numba -c conda-forge \
+  -c pytorch -c defaults cudf=0.8 cuml=0.8 cugraph=0.8 python=3.6 cudatoolkit=9.2
+```
+## Example codes from LidarPC-KDTree
+
+# Implementation

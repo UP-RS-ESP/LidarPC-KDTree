@@ -381,6 +381,33 @@ if __name__ == '__main__':
 #    print('time (average of %d runs): %0.3fs or %0.2fm'%(inps.nr_of_repetitions, pc_query_cyflannKDTree_k1000_time/inps.nr_of_repetitions, pc_query_cyflannKDTree_k1000_time/inps.nr_of_repetitions/60))
     pc_xyz_cyflannKDTree_tree = None
 
+    ## CUDA Processing
+    # Fit a NearestNeighbors model and query it
+    import cudf
+    from cuml.neighbors.nearest_neighbors import NearestNeighbors as cumlKNN
+    from sklearn.neighbors import NearestNeighbors as skKNN
+#    nrows=pc_xyz.shape[0]
+#    ncols=pc_xyz.shape[1]
+#    X = np.random.random((nrows,ncols)).astype('float32')
+#    df = pd.DataFrame({'fea%d'%i:X[:,i] for i in range(X.shape[1])}).fillna(0)
+    df = pd.DataFrame({'X':pc_xyz[:,0], 'Y':pc_xyz[:,1], 'Z':pc_xyz[:,2],})
+
+    n_neighbors = 5
+    # use the sklearn KNN model to fit the dataset 
+    knn_sk = skKNN(metric = 'sqeuclidean', )
+    knn_sk.fit(pc)
+    D_sk,I_sk = knn_sk.kneighbors(X,n_neighbors)
+    %%time
+    # convert the pandas dataframe to cudf dataframe
+    X = cudf.DataFrame.from_pandas(X)
+
+    # use cuml's KNN model to fit the dataset
+    knn_cuml = cumlKNN()
+    knn_cuml.fit(X)
+    
+    # calculate the distance and the indices of the samples present in the dataset
+    D_cuml,I_cuml = knn_cuml.kneighbors(X,n_neighbors)
+
     TimeTable = {'Algorithm': ['KDTree','cKDTree','sklearnKDTree','pyKDTree', 'pyflannKDTree', 'cyflannKDTree'],
         'Generate KDTree (s)': [pc_generate_KDTree_time/inps.nr_of_repetitions, pc_generate_cKDTree_time/inps.nr_of_repetitions, pc_generate_sklearnKDTree_time/inps.nr_of_repetitions, pc_generate_pyKDTree_time/inps.nr_of_repetitions, pc_generate_pyflannKDTree_time/inps.nr_of_repetitions, pc_generate_cyflannKDTree_time/inps.nr_of_repetitions],
         'Query k=5 (s)': [pc_query_KDTree_k5_time/inps.nr_of_repetitions, pc_query_cKDTree_k5_time/inps.nr_of_repetitions, pc_query_sklearnKDTree_k5_time/inps.nr_of_repetitions,  pc_query_pyKDTree_k5_time/inps.nr_of_repetitions, pc_query_pyflannKDTree_k5_time/inps.nr_of_repetitions, pc_query_cyflannKDTree_k5_time/inps.nr_of_repetitions],
