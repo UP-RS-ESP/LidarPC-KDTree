@@ -14,26 +14,14 @@ We use the following algorithms:
 
 | Name | Reference and Documentation | Comments |
 |:---|:---|:---|
-|scipy.spatial.KDTree| [Manual](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.html#scipy.spatial.KDTree) | Pure Python implementation of KD tree |
-|scipy.spatial.cKDTree | [Manual](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html#scipy.spatial.cKDTree) | KDTree implementation in Cython |
-|sklearn.neighbors.KDTree | [Manual](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KDTree.html) | KDTree implementation in sklearn |
-|pyKDTree | [github page](https://github.com/storpipfugl/pykdtree) and [pypi project page](https://pypi.org/project/pykdtree/#description) |  fast implementation for common use cases (low dimensions and low number of neighbours) for both tree construction and queries. The implementation is based on scipy.spatial.cKDTree and libANN by combining the best features from both and focus on implementation efficiency.
-| pyflann | [github](https://github.com/primetang/pyflann) | pyflann is the python bindings for [FLANN - Fast Library for Approximate Nearest Neighbors](http://www.cs.ubc.ca/research/flann/)
-| cyflann | [github](https://github.com/dougalsutherland/cyflann) | cyflann is the a cythin interface for [FLANN - Fast Library for Approximate Nearest Neighbors](http://www.cs.ubc.ca/research/flann/)
+|scipy.spatial.KDTree| [Manual](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.html#scipy.spatial.KDTree) | Pure Python implementation of KD tree. Querying is very slow and usage is not suggested. *Single core CPU processing.* |
+|scipy.spatial.cKDTree | [Manual](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html#scipy.spatial.cKDTree) | KDTree implementation in Cython. *Single core CPU processing.* |
+|sklearn.neighbors.KDTree | [Manual](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KDTree.html) | KDTree implementation in sklearn. *Single core CPU processing.* |
+|pyKDTree | [github page](https://github.com/storpipfugl/pykdtree) and [pypi project page](https://pypi.org/project/pykdtree/#description) |  fast implementation for common use cases (low dimensions and low number of neighbours) for both tree construction and queries. The implementation is based on scipy.spatial.cKDTree and libANN by combining the best features from both and focus on implementation efficiency. *Multi-core CPU processing.*|
+| pyflann | [github](https://github.com/primetang/pyflann) | pyflann is the python bindings for [FLANN - Fast Library for Approximate Nearest Neighbors](http://www.cs.ubc.ca/research/flann/). *Multi-core CPU processing.* |
+| cyflann | [github](https://github.com/dougalsutherland/cyflann) | cyflann is the a cythin interface for [FLANN - Fast Library for Approximate Nearest Neighbors](http://www.cs.ubc.ca/research/flann/). *Multi-core CPU processing.* |
 | kNN-CUDA | ??? | GPU implementaiton of knn
 
-
-# Preliminary results
-A first test using various algorithms is shown in the table below. Note that the KDTree calculations from *scipy.spatial.KDTree* have note been included, because they are too slow. All results show times in seconds (s).
-
-|Algorithm | Generate KDTree (s) |Query k=5 (s) |  Query k=10 (s) | Query k=50 (s)|
-|:---|---:|---:|---:|---:|
-KDTree        |13.695143  |# |       # |       #
-cKDTree        |5.555057  | 5.109167 | 7.070755  |  20.352178
-sklearnKDTree  |6.576532 | 12.202257 | 18.981463| 38.920412
-pyKDTree       |0.448567  | 1.294014| 1.828395 |  8.235128
-pyflannKDTree  |0.979680  | 0.840919 |1.288056 |  4.726238
-cyflannKDTree  |0.855574  | 0.859662| 1.236899 |  4.833241
 
 # Test datasets
 ## Airborne Lidar data from Santa Cruz Island, California
@@ -45,6 +33,20 @@ The dataset contains 3,348,668 points with a point-density of 7.2 pts/m^2 and ha
 
 ## Structure-from-Motion based data from Campus Golm (University of Potsdam)
 
+# Preliminary results
+## Pozo catchments (n=3,348,668 points)
+A first test using various algorithms is shown in the table below. Note that the KDTree calculations from *scipy.spatial.KDTree* have note been included, because they are too slow. All results show times in seconds (s) and have been averaged over n=5 runs.
+
+|  Algorithm     |   Generate KDTree (s) |   Query k=5 (s) |   Query k=10 (s) |   Query k=50 (s) |
+| :--------------|----------------------:|----------------:|-----------------:|-----------------:|
+  KDTree | 13.71 | *not run* |  *not run* |  *not run* |
+  |  cKDTree       |  5.37 | 4.52 |  6.4  | 20.18 |
+  |  sklearnKDTree |  6.17 | 8.04 | 10.12 | 27.08 |
+  |  pyKDTree      |  0.35 | 0.65 |  0.91 |  4.03 |
+  |  pyflannKDTree |  0.78 | 0.59 |  0.86 |  4.33 |
+  |  cyflannKDTree |  0.83 | 0.59 |  0.91 |  3.53 |
+
+  
 # Implementation
 Before running, ensure that you have an up-to-date Python environment. For the sake of compatibility and comparability, we rely on the following `conda` environment. We realize that timing may change in the future, if versions are updated, but the order-of-magnitude comparison should still hold. All tests have been performed in Ubuntu 18.04, but other systems (including Mac OS X and Windows) should work equally well. Note that CUDA implementation on Mac OS X may be limited.
 

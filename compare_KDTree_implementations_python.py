@@ -10,6 +10,7 @@ The code times the KD-Tree generation and then the query of
 k=5,10,50,100,500,1000 nearest neighbors.
 
 """
+#conda install tabulate pandas pytables scipy pykdtree pyflann cyflann
 
 import argparse, numpy as np, pandas as pd, timeit
 
@@ -118,42 +119,62 @@ def cmdLineParser():
     return parser.parse_args()
 
 
+def pandas_df_to_markdown_table(df):
+    # Dependent upon ipython
+    # shamelessly stolen from https://stackoverflow.com/questions/33181846/programmatically-convert-pandas-dataframe-to-markdown-table
+    from IPython.display import Markdown, display
+    fmt = ['---' for i in range(len(df.columns))]
+    df_fmt = pd.DataFrame([fmt], columns=df.columns)
+    df_formatted = pd.concat([df_fmt, df])
+    #display(Markdown(df_formatted.to_csv(sep="|", index=False)))
+    return Markdown(df_formatted.to_csv(sep="|", index=False))
+#     return df_formatted
+
+def df_to_markdown(df, y_index=False):
+    from tabulate import tabulate
+    blob = tabulate(df, headers='keys', tablefmt='pipe')
+    if not y_index:
+        # Remove the index with some creative splicing and iteration
+        return '\n'.join(['| {}'.format(row.split('|', 2)[-1]) for row in blob.split('\n')])
+    return blob
+
 ### Main
 if __name__ == '__main__': 
     inps = cmdLineParser()
 # Testing
     inps = argparse.ArgumentParser(description='Compare KDTree algorithms for lidar or SfM PointClouds (PC). B. Bookhagen (bodo.bookhagen@uni-potsdam.de), Aug 2019.')
     inps.inlas = 'Pozo_WestCanada_clg.laz'
-    inps.nr_of_repetitions = 1
+    inps.nr_of_repetitions = 5
     inps.hdf_filename = 'ThinkPad_P50.hdf'
-    inps.csv_filename = 'ThinkPad_P50.csv'
+    inps.csv_filename = 'ThinkPad_P50_repetitions5.csv'
     
     print('Loading input file: %s... '%inps.inlas, end='', flush=True)
     pc_xyz = load_LAS(inps.inlas, dtype='float32')
     print('loaded %s points'%"{:,}".format(pc_xyz.shape[0]))
 
     #Run standard KDTree (python implementation from scipy)
+    ## Not RUNNING KDTREE querying, because it is too slow.
     print('\n\tGenerating KDTree... (%dx)'%(inps.nr_of_repetitions), end='', flush=True)
     wrapped = wrapper(pc_generate_KDTree, pc_xyz)
     pc_generate_KDTree_time = timeit.timeit(wrapped, number=inps.nr_of_repetitions)
     pc_xyz_KDTree_tree = pc_generate_KDTree(pc_xyz)
     print('time (average of %d runs): %0.3fs or %0.2fm'%(inps.nr_of_repetitions, pc_generate_KDTree_time/inps.nr_of_repetitions, pc_generate_KDTree_time/inps.nr_of_repetitions/60))
 
-    print('\tQuerying KDTree with k=5 for all points (%dx)... '%(inps.nr_of_repetitions), end='', flush=True)
-    wrapped = wrapper(pc_query_KDTree, pc_xyz_KDTree_tree, pc_xyz, k=5)
-    pc_query_KDTree_k5_time = timeit.timeit(wrapped, number=inps.nr_of_repetitions)
-    print('time (average of %d runs): %0.3fs or %0.2fm'%(inps.nr_of_repetitions, pc_query_KDTree_k5_time/inps.nr_of_repetitions, pc_query_KDTree_k5_time/inps.nr_of_repetitions/60))
-
-    print('\tQuerying KDTree with k=10 for all points (%dx)... '%(inps.nr_of_repetitions), end='', flush=True)
-    wrapped = wrapper(pc_query_KDTree, pc_xyz_KDTree_tree, pc_xyz, k=10)
-    pc_query_KDTree_k10_time = timeit.timeit(wrapped, number=inps.nr_of_repetitions)
-    print('time (average of %d runs): %0.3fs or %0.2fm'%(inps.nr_of_repetitions, pc_query_KDTree_k10_time/inps.nr_of_repetitions, pc_query_KDTree_k10_time/inps.nr_of_repetitions/60))
-
-    print('\tQuerying KDTree with k=50 for all points (%dx)... '%(inps.nr_of_repetitions), end='', flush=True)
-    wrapped = wrapper(pc_query_KDTree, pc_xyz_KDTree_tree, pc_xyz, k=50)
-    pc_query_KDTree_k50_time = timeit.timeit(wrapped, number=inps.nr_of_repetitions)
-    print('time (average of %d runs): %0.3fs or %0.2fm'%(inps.nr_of_repetitions, pc_query_KDTree_k50_time/inps.nr_of_repetitions, pc_query_KDTree_k50_time/inps.nr_of_repetitions/60))
-
+#    print('\tQuerying KDTree with k=5 for all points (%dx)... '%(inps.nr_of_repetitions), end='', flush=True)
+#    wrapped = wrapper(pc_query_KDTree, pc_xyz_KDTree_tree, pc_xyz, k=5)
+#    pc_query_KDTree_k5_time = timeit.timeit(wrapped, number=inps.nr_of_repetitions)
+#    print('time (average of %d runs): %0.3fs or %0.2fm'%(inps.nr_of_repetitions, pc_query_KDTree_k5_time/inps.nr_of_repetitions, pc_query_KDTree_k5_time/inps.nr_of_repetitions/60))
+#
+#    print('\tQuerying KDTree with k=10 for all points (%dx)... '%(inps.nr_of_repetitions), end='', flush=True)
+#    wrapped = wrapper(pc_query_KDTree, pc_xyz_KDTree_tree, pc_xyz, k=10)
+#    pc_query_KDTree_k10_time = timeit.timeit(wrapped, number=inps.nr_of_repetitions)
+#    print('time (average of %d runs): %0.3fs or %0.2fm'%(inps.nr_of_repetitions, pc_query_KDTree_k10_time/inps.nr_of_repetitions, pc_query_KDTree_k10_time/inps.nr_of_repetitions/60))
+#
+#    print('\tQuerying KDTree with k=50 for all points (%dx)... '%(inps.nr_of_repetitions), end='', flush=True)
+#    wrapped = wrapper(pc_query_KDTree, pc_xyz_KDTree_tree, pc_xyz, k=50)
+#    pc_query_KDTree_k50_time = timeit.timeit(wrapped, number=inps.nr_of_repetitions)
+#    print('time (average of %d runs): %0.3fs or %0.2fm'%(inps.nr_of_repetitions, pc_query_KDTree_k50_time/inps.nr_of_repetitions, pc_query_KDTree_k50_time/inps.nr_of_repetitions/60))
+#
 #    print('\tQuerying KDTree with k=100 for all points (%dx)... '%(inps.nr_of_repetitions), end='', flush=True)
 #    wrapped = wrapper(pc_query_KDTree, pc_xyz_KDTree_tree, pc_xyz, k=100)
 #    pc_query_KDTree_k100_time = timeit.timeit(wrapped, number=inps.nr_of_repetitions)
@@ -370,3 +391,5 @@ if __name__ == '__main__':
     df_TimeTable = pd.DataFrame(TimeTable, columns= ['Algorithm', 'Generate KDTree (s)', 'Query k=5 (s)', 'Query k=10 (s)', 'Query k=50 (s)'])
     print(df_TimeTable)
     df_TimeTable.to_csv(inps.csv_filename, ',')
+    df_to_markdown(df_TimeTable.round(2))
+    
