@@ -147,7 +147,7 @@ Table: Worst (slowest times in seconds) for any processing steps - mostly reflec
 |  cKDTree       |                  0.1  |            0.03 |             0.08 |             0.06 |              0.12 |              0.74 |               2.51 |
 |  pyKDTree      |                  0.05 |            0.02 |             0.01 |             0.07 |              0.12 |              0.61 |               1.77 |
 
-Table: Range of times between differeny leaf size. Most notable differences are for the single core _sklearnKDTree_ approach.
+Table: Range of times between different leaf sizes. Most notable differences are for the single core _sklearnKDTree_ approach.
 
 
 |  Algorithm     |   Generate KDTree (# leafsize) |   Query k=5 (# leafsize) |   Query k=10 (# leafsize) |   Query k=50 (# leafsize) |   Query k=100 (# leafsize) |   Query k=500 (# leafsize) |   Query k=1000 (# leafsize) |
@@ -157,7 +157,7 @@ Table: Range of times between differeny leaf size. Most notable differences are 
 |  sklearnKDTree |                             28 |                       12 |                         8 |                         8 |                          8 |                          8 |                           8 |
 |  pyKDTree      |                             36 |                       16 |                        20 |                        16 |                         28 |                         26 |                          32 |
 
-Table: Best leaf sizes (fastest time). Note the differences for varying numbers of neighbors.
+Table: Best leaf sizes (fastest times). Note the differences for varying numbers of neighbors.
 
 
 ### Comparing pyKDTree and cKDTree for 12, 24, and 40 cores
