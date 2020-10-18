@@ -1,7 +1,7 @@
 ---
 title: "Comparing Python KD-Tree Implementations with Focus on Point Cloud Processing"
-subtitle: What is the most effective way to process lidar and SfM point clouds?
-author: "Bodo Bookhagen, [bodo.bookhagen@uni-potsdam.de](bodo.bookhagen@uni-potsdam.de), University of Potsdam"
+subtitle: What is the most effective way to process calculate KDTrees for lidar and SfM point clouds?
+author: "Bodo Bookhagen, [bodo.bookhagen@uni-potsdam.de](bodo.bookhagen@uni-potsdam.de), Geological Remote Sensing, University of Potsdam"
 date: "Oct-18-2020"
 footnotes-pretty: true
 listings-disable-line-numbers: false
@@ -9,7 +9,7 @@ titlepage: true
 toc-own-page: true
 book: false
 header-left: "Comparing Python KD-Tree Implementations"
-footer-left: "Bodo Bookhagen"
+footer-left: "Geological Remote Sensing"
 logo-width: 350
 disable-header-and-footer: false
 lang: "en"
@@ -55,6 +55,7 @@ We construct the following scenarios:
 2. We time the generation of a KD-Tree and the queries separately for each.
 3. Searching for neighbors within a given search radius/sphere (not supported by all algorithms).
 4. The k-nearest neighbors can be used to estimate point-density or perform further classification on the neighborhood structure of points (e.g., curvature)
+5. We compare approaches for three computing setups: (1) AMD Ryzen 3900X (3.8 GHz, 12 cores); (2) AMD Ryzen 2970WX (2.9 GHz, 24 cores); (3) Intel Xeon Gold 6230 CPU (2.10 GHz, 2x20 cores)
 
 **We note that we query the tree with all points (e.g., k=50 neighbors for all points) and thus create large queries for neighborhood statistical analysis.**
 
@@ -163,9 +164,13 @@ Table: Best leaf sizes (fastest times). Note the differences for varying numbers
 ### Comparing pyKDTree and cKDTree for 12, 24, and 40 cores
 ![Varying leaf size for _pyKDTree_ and _cKDTree_. The leaf size does not have an significant impact on querying time on multi-core systems (although minor differences can be noted). There is an advantage of multiple cores for higher numbers of neighbors (higher k values). The _cKDTree_ algorithm appears to be the fastest for searches of large k \label{pc_pyKDTree_k5_k50_vcores}](figs/pc_pyKDTree_k5_k50_vcores.png)
 
+![Comparison of pyKDTree and cKDTree for different number of cores (both use a leaf size of 20). _cKDTree_ outperforms _pyKDTree_ and shows a nearly linear rise in time for increasing values in k-nearest neighbors. Higher number of cores result in faster processing time, most notably at higher number of ks. Processing times for lower k are faster for higher CPU speeds (3.9 GHz vs. 2.1 GHz). \label{pc_ckDTree_pyKDTree_k5_to_k1000_vcores_leafsize20}](figs/pc_ckDTree_pyKDTree_k5_to_k1000_vcores_leafsize20.png)
+
+![A nearly linear rise in time for increasing values in k-nearest neighbors (only shown for cKDTree, leaf size = 20). Higher number of cores result in faster processing time, most notably at higher number of ks. Processing times for lower k are faster for higher CPU speeds (3.9 GHz vs. 2.1 GHz). \label{pc_cKDTree_k5_to_k1000_vcores_leafsize20}](figs/pc_cKDTree_k5_to_k1000_vcores_leafsize20.png)
 
 ### Comparing multi-core cKDTree and multi-core FLANN (Fast Library for Approximate Nearest Neighbors) approaches
 
+![Comparison of _cyFLANN_ and _cKDTree_. With higher number of cores, _cKDTree_ performs better than _cyFLANN_ for large number of neighbors. cyFLANN performs better for lower number of neighbors (small k) (a factor of 2 at k=500 neighbors with 40 cores). \label{pc_ckDTree_cyfFLANN_k5_to_k1000_vcores_leafsize20}](figs/pc_ckDTree_cyfFLANN_k5_to_k1000_vcores_leafsize20.png)
 
 # Codes
 **All Python codes are available on the github repository [LidarPC-KDTree](https://github.com/UP-RS-ESP/LidarPC-KDTree).**

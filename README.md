@@ -15,6 +15,7 @@ We construct the following scenarios:
 2. We time the generation of a KD-Tree and the queries separately for each.
 3. Searching for neighbors within a given search radius/sphere (not supported by all algorithms).
 4. The k-nearest neighbors can be used to estimate point-density or perform further classification on the neighborhood structure of points (e.g., curvature)
+5. We compare approaches for three computing setups: (1) AMD Ryzen 3900X (3.8 GHz, 12 cores); (2) AMD Ryzen 2970WX (2.9 GHz, 24 cores); (3) Intel Xeon Gold 6230 CPU (2.10 GHz, 2x20 cores)
 
 
 | Name | Reference and Documentation | Comments |
@@ -53,6 +54,12 @@ Comparing the traditional and widely used _sklearnKDTree_ (single core) and _cKD
 ![Generation and query times for single-core sklearnKDTree for varying leafsizes. \label{pc_sklearnKDTree_AMD3900X_12cores}](https://github.com/UP-RS-ESP/LidarPC-KDTree/raw/master/docs/figs/pc_sklearnKDTree_AMD3900X_12cores.png)
 
 ![The multi-core cKDTree implementation in _scipy.spatial.cKDTree_ performs well - but you need to set the 'jobs=-1' parameter in the query to achieve best results and use all available cores (only during queries). \label{pc_cKDTree_AMD3900X_12cores}](https://github.com/UP-RS-ESP/LidarPC-KDTree/raw/master/docs/figs/pc_cKDTree_AMD3900X_12cores.png)
+
+![Comparison of pyKDTree and cKDTree for different number of cores (both use a leaf size of 20). _cKDTree_ outperforms _pyKDTree_ and shows a nearly linear rise in time for increasing values in k-nearest neighbors. Higher number of cores result in faster processing time, most notably at higher number of ks. Processing times for lower k are faster for higher CPU speeds (3.9 GHz vs. 2.1 GHz). \label{pc_ckDTree_pyKDTree_k5_to_k1000_vcores_leafsize20}](https://github.com/UP-RS-ESP/LidarPC-KDTree/raw/master/docs/figs/pc_ckDTree_pyKDTree_k5_to_k1000_vcores_leafsize20.png)
+
+![A nearly linear rise in time for increasing values in k-nearest neighbors (only shown for cKDTree, leaf size = 20). Higher number of cores result in faster processing time, most notably at higher number of ks. Processing times for lower k are faster for higher CPU speeds (3.9 GHz vs. 2.1 GHz). \label{pc_cKDTree_k5_to_k1000_vcores_leafsize20}](https://github.com/UP-RS-ESP/LidarPC-KDTree/raw/master/docs/figs/pc_cKDTree_k5_to_k1000_vcores_leafsize20.png)
+
+![Comparison of _cyFLANN_ and _cKDTree_. With higher number of cores, _cKDTree_ performs better than _cyFLANN_ for large number of neighbors. cyFLANN performs better for lower number of neighbors (small k) (a factor of 2 at k=500 neighbors with 40 cores). \label{pc_ckDTree_cyfFLANN_k5_to_k1000_vcores_leafsize20}](https://github.com/UP-RS-ESP/LidarPC-KDTree/raw/master/docs/figs/pc_ckDTree_cyfFLANN_k5_to_k1000_vcores_leafsize20.png)
 
 |  Algorithm     |   Generate KDTree (s) |   Query k=5 (s) |   Query k=10 (s) |   Query k=50 (s) |   Query k=100 (s) |   Query k=500 (s) |   Query k=1000 (s) |
 | :--------------|----------------------:|----------------:|-----------------:|-----------------:|------------------:|------------------:|-------------------:|
