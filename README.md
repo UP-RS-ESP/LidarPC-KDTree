@@ -66,7 +66,7 @@ Comparing the traditional and widely used _sklearnKDTree_ (single core) and _cKD
 Table: Comparison of fastest processing times (any leaf size) for all implemented algorithms in seconds. Note that scipy standard _KDTree_ has not been processed due to the very slow processing times. All times are the average of 3 iterations.
 
 
-|  Algorithm     |   Generate KDTree (# leafsize) |   Query k=5 (# leafsize) |   Query k=10 (# leafsize) |   Query k=50 (# leafsize) |   Query k=100 (# leafsize) |   Query k=500 (# leafsize) |   Query k=1000 (# leafsize) |
+|  Algorithm     |   Generate KDTree (leaf size) |   Query k=5 (leaf size) |   Query k=10 (leaf size) |   Query k=50 (leaf size) |   Query k=100 (leaf size) |   Query k=500 (leaf size) |   Query k=1000 (leaf size) |
 | :--------------|-------------------------------:|-------------------------:|--------------------------:|--------------------------:|---------------------------:|---------------------------:|----------------------------:|
 |  KDTree        |                             10 |                        8 |                         8 |                         8 |                          8 |                          8 |                           8 |
 |  cKDTree       |                             36 |                       14 |                        16 |                        24 |                         14 |                         38 |                          38 |

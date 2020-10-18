@@ -150,7 +150,7 @@ Table: Worst (slowest times in seconds) for any processing steps - mostly reflec
 Table: Range of times between different leaf sizes. Most notable differences are for the single core _sklearnKDTree_ approach.
 
 
-|  Algorithm     |   Generate KDTree (# leafsize) |   Query k=5 (# leafsize) |   Query k=10 (# leafsize) |   Query k=50 (# leafsize) |   Query k=100 (# leafsize) |   Query k=500 (# leafsize) |   Query k=1000 (# leafsize) |
+|  Algorithm     |   Generate KDTree (leaf size) |   Query k=5 (leaf size) |   Query k=10 (leaf size) |   Query k=50 (leaf size) |   Query k=100 (leaf size) |   Query k=500 (leaf size) |   Query k=1000 (leaf size) |
 | :--------------|-------------------------------:|-------------------------:|--------------------------:|--------------------------:|---------------------------:|---------------------------:|----------------------------:|
 |  KDTree        |                             10 |                        8 |                         8 |                         8 |                          8 |                          8 |                           8 |
 |  cKDTree       |                             36 |                       14 |                        16 |                        24 |                         14 |                         38 |                          38 |
