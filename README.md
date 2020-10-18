@@ -7,9 +7,9 @@ One of the core processing steps for irregular PC is to understand the neighborh
 
 We note that there exist other algorithm and parameter comparisons (e.g. [knn-benchmarking in python](https://jakevdp.github.io/blog/2013/04/29/benchmarking-nearest-neighbor-searches-in-python/) and [knn-benchmarking](http://mccormickml.com/2017/09/08/knn-benchmarks-part-1/)) and these are very useful and helpful -- but these are neither tailored for lidar/SfM PC nor have been using recent implementations. Most comparison also focus on the general applicability of KD-Tree algorithm and explore the impact of leaf sizes and dimensionality - both parameters do not change for lidar PC.
 
-** A detailed analysis is described and illustrated in [Comparing Python KD-Tree Implementations with Focus on Point Cloud Processing](docs/Compare_KDTree_implementations.pdf).**
+**A detailed analysis is described and illustrated in [Comparing Python KD-Tree Implementations with Focus on Point Cloud Processing](docs/Compare_KDTree_implementations.pdf).**
 
-## Method and Approach
+## Methods and Approach
 We construct the following scenarios:
 1. Deriving k=5,10,50,100,500,1000 nearest neighbors from four lidar/SfM point clouds with 14e6, 38e6, 69e6, and 232e6 (million) points.
 2. We time the generation of a KD-Tree and the queries separately for each.
@@ -48,3 +48,29 @@ Comparing the traditional and widely used _sklearnKDTree_ (single core) and _cKD
 5. Comparing _cKDTree_ with 12, 24, and 48 core processors indicates a clear advantage of multi-threading processes. We emphasize that in order to take full advantage of multi-threading processes, an increase in available DRAM is needed (i.e., more cores require more DRAM). We note that _pyKDTree_ has lower peak memory requirement than _cKDTree_.
 6. The FLANN (Fast Library for Approximate Nearest Neighbors) family of approaches provides additional advancements, especially for large datasets and massive queries.
 7. Initial tests with cuML (CUDA RAPIDS) show that the implemented brute-force approach for nearest neighbor searches is not competitive against the multi-core approaches (_cKDTree_ and _pyKDTree_) and highly optimized FLANN approaches. But there are other processing advantages of data analysis using  CUDA Dataframes (cudf).
+
+
+![Generation and query times for single-core sklearnKDTree for varying leafsizes. \label{pc_sklearnKDTree_AMD3900X_12cores}](https://github.com/UP-RS-ESP/LidarPC-KDTree/raw/master/docs/figs/pc_sklearnKDTree_AMD3900X_12cores.png)
+
+![The multi-core cKDTree implementation in _scipy.spatial.cKDTree_ performs well - but you need to set the 'jobs=-1' parameter in the query to achieve best results and use all available cores (only during queries). \label{pc_cKDTree_AMD3900X_12cores}](https://github.com/UP-RS-ESP/LidarPC-KDTree/raw/master/docs/figs/pc_cKDTree_AMD3900X_12cores.png)
+
+|  Algorithm     |   Generate KDTree (s) |   Query k=5 (s) |   Query k=10 (s) |   Query k=50 (s) |   Query k=100 (s) |   Query k=500 (s) |   Query k=1000 (s) |
+| :--------------|----------------------:|----------------:|-----------------:|-----------------:|------------------:|------------------:|-------------------:|
+|  KDTree        |                5.25    |          nan    |           nan    |           nan    |            nan    |            nan    |             nan    |
+|  sklearnKDTree |                  1.51 |           36.93 |           nan    |           nan    |            nan    |            nan    |             nan    |
+|  **cKDTree**       |                  0.32 |            0.23 |             0.31 |             0.91 |              1.67 |              7.47 |              15.13 |
+|  pyKDTree      |                  0.07 |            0.23 |             0.32 |             1.1  |              2.58 |             35.17 |             129.81 |
+|  pyflannKDTree |                  0.19 |            0.17 |             0.24 |             0.97 |              2.11 |             12.54 |              27.4  |
+|  cyflannKDTree |                  0.26 |            0.2  |             0.26 |             1    |              2.2  |              9.69 |              20.01 |
+
+Table: Comparison of fastest processing times (any leaf size) for all implemented algorithms in seconds. Note that _KDTree_ has not been processed due to the very slow processing times. All times are the average of 3 iterations.
+
+
+|  Algorithm     |   Generate KDTree (# leafsize) |   Query k=5 (# leafsize) |   Query k=10 (# leafsize) |   Query k=50 (# leafsize) |   Query k=100 (# leafsize) |   Query k=500 (# leafsize) |   Query k=1000 (# leafsize) |
+| :--------------|-------------------------------:|-------------------------:|--------------------------:|--------------------------:|---------------------------:|---------------------------:|----------------------------:|
+|  KDTree        |                             10 |                        8 |                         8 |                         8 |                          8 |                          8 |                           8 |
+|  cKDTree       |                             36 |                       14 |                        16 |                        24 |                         14 |                         38 |                          38 |
+|  sklearnKDTree |                             28 |                       12 |                         8 |                         8 |                          8 |                          8 |                           8 |
+|  pyKDTree      |                             36 |                       16 |                        20 |                        16 |                         28 |                         26 |                          32 |
+
+Table: Best leaf sizes (fastest times). Note the differences for varying numbers of neighbors.
