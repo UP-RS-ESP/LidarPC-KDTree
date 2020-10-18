@@ -126,7 +126,7 @@ Comparing the traditional and widely used _sklearnKDTree_ (single core), _cKDTre
 |  pyflannKDTree |                  0.19 |            0.17 |             0.24 |             0.97 |              2.11 |             12.54 |              27.4  |
 |  cyflannKDTree |                  0.26 |            0.2  |             0.26 |             1    |              2.2  |              9.69 |              20.01 |
 
-Table: Comparison of fastest processing times (any leaf size) for all implemented algorithms in seconds. Note that _KDTree_ has not been processed due to the very slow processing times. All times are the average of 3 iterations.
+Table: Comparison of fastest processing times (any leaf size) for all implemented algorithms in seconds. Note that the scipy standard _KDTree_ has not been processed due to the very slow processing times. All times are the average of 3 iterations.
 
 
 |  Algorithm     |   Generate KDTree (s) |   Query k=5 (s) |   Query k=10 (s) |   Query k=50 (s) |   Query k=100 (s) |   Query k=500 (s) |   Query k=1000 (s) |
