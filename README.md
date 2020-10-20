@@ -81,3 +81,7 @@ Table: Comparison of fastest processing times (any leaf size) for all implemente
 |  pyKDTree      |                             36 |                       16 |                        20 |                        16 |                         28 |                         26 |                          32 |
 
 Table: Best leaf sizes (fastest times). Note the differences for varying numbers of neighbors.
+
+![Create and query cKDTree for three k neighbors and leaf sizes. Creating the cKDTree does not show large variability, but querying is mostly dependent on number of k neighbors.  \label{Pozo_WestCanada_clg}](https://github.com/UP-RS-ESP/LidarPC-KDTree/raw/master/docs/figs/Pozo_WestCanada_clg.png)
+
+![Create and query cKDTree for using 1 to 8 threads. Generating the cKDTree only slightly improves when increasing numbers of threads, but querying significantly improves for higher number threads.  \label{Pozo_WestCanada_clg_jobs}](https://github.com/UP-RS-ESP/LidarPC-KDTree/raw/master/docs/figs/Pozo_WestCanada_clg_jobs.png)

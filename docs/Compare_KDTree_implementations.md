@@ -1,8 +1,8 @@
 ---
 title: "Comparing Python KD-Tree Implementations with Focus on Point Cloud Processing"
 subtitle: What is the most effective way to process calculate KDTrees for lidar and SfM point clouds?
-author: "Bodo Bookhagen, [bodo.bookhagen@uni-potsdam.de](bodo.bookhagen@uni-potsdam.de), Geological Remote Sensing, University of Potsdam"
-date: "Oct-18-2020"
+author: "Bodo Bookhagen [bodo.bookhagen@uni-potsdam.de](bodo.bookhagen@uni-potsdam.de) and Aljoscha Rheinwalt [aljoscha.rheinwalt@uni-potsdam.de](aljoscha.rheinwalt@uni-potsdam.de), Geological Remote Sensing, University of Potsdam"
+date: "Oct-20-2020"
 footnotes-pretty: true
 listings-disable-line-numbers: false
 titlepage: true
@@ -167,6 +167,15 @@ Table: Best leaf sizes (fastest times). Note the differences for varying numbers
 ![Comparison of pyKDTree and cKDTree for different number of cores (both use a leaf size of 20). _cKDTree_ outperforms _pyKDTree_ and shows a nearly linear rise in time for increasing values in k-nearest neighbors. Higher number of cores result in faster processing time, most notably at higher number of ks. Processing times for lower k are faster for higher CPU speeds (3.9 GHz vs. 2.1 GHz). \label{pc_ckDTree_pyKDTree_k5_to_k1000_vcores_leafsize20}](figs/pc_ckDTree_pyKDTree_k5_to_k1000_vcores_leafsize20.png)
 
 ![A nearly linear rise in time for increasing values in k-nearest neighbors (only shown for cKDTree, leaf size = 20). Higher number of cores result in faster processing time, most notably at higher number of ks. Processing times for lower k are faster for higher CPU speeds (3.9 GHz vs. 2.1 GHz). \label{pc_cKDTree_k5_to_k1000_vcores_leafsize20}](figs/pc_cKDTree_k5_to_k1000_vcores_leafsize20.png)
+
+### cKDTree: Create and querying data - impact of number of points and threads
+_cKDTree_ is among the fastest implentation of KDTree queries. First, we compare how _cKDTree_ various for varying number of points (Figure \ref{Pozo_WestCanada_clg}). We observe a nearly linear relation between logarithmic numbers of points and logarithmic time. In other words, increasing the number of points by a factor of ten nearly increases the query duration by a factor of 10.
+
+![Create and query cKDTree for three k neighbors and leaf sizes. Creating the cKDTree does not show large variability, but querying is mostly dependent on number of k neighbors.  \label{Pozo_WestCanada_clg}](figs/Pozo_WestCanada_clg.png)
+
+In a next step, we vary the number of threads from 1 to 8 to illustrate the multi-threading potential of _cKDTree_ (Figure \ref{Pozo_WestCanada_clg_jobs}).
+
+![Create and query cKDTree for using 1 to 8 threads. Generating the cKDTree only slightly improves when increasing numbers of threads, but querying significantly improves for higher number threads.  \label{Pozo_WestCanada_clg_jobs}](figs/Pozo_WestCanada_clg_jobs.png)
 
 ### Comparing multi-core cKDTree and multi-core FLANN (Fast Library for Approximate Nearest Neighbors) approaches
 
@@ -461,4 +470,151 @@ Note that we also save the results to a pandas dataframe and the results of the 
 
 This is repeated for _pyKDTree_ (see Python code in github).
 
-The generation of figures is outlined in [python/plot_py_and_cKDTree_variouscores.py]() and
+The generation of figures is outlined in [python/plot_py_and_cKDTree_variouscores.py](https://github.com/UP-RS-ESP/LidarPC-KDTree/raw/master/python/plot_py_and_cKDTree_variouscores.py).
+
+## Impact of number of points and number of threads
+These codes are in [python/Pozo_WestCanada_clg.py](https://github.com/UP-RS-ESP/LidarPC-KDTree/raw/master/python/Pozo_WestCanada_clg.py) and [python/Pozo_WestCanada_clg_jobs.py](https://github.com/UP-RS-ESP/LidarPC-KDTree/raw/master/python/Pozo_WestCanada_clg_jobs.py).
+
+Pozo_WestCanada_clg.py:
+```python
+import sys
+import numpy as np
+import laspy as lp
+
+from time import time
+from scipy.spatial import cKDTree as kdtree
+from matplotlib import pyplot as pl
+
+def load_las(fn):
+    with lp.file.File(fn) as fp:
+        pt = np.c_[fp.x, fp.y, fp.z]
+
+    return pt
+
+def time_kdtree(pt, n, k, leafsize, n_jobs):
+    i = np.random.randint(pt.shape[0], size = n)
+    t0 = time()
+    tr = kdtree(pt[i], leafsize = leafsize)
+    t1 = time()
+    tr.query(pt[i], k = k, n_jobs = n_jobs)
+    t2 = time()
+    return (t1 - t0, t2 - t1)
+
+if __name__ == '__main__':
+    fn = sys.argv[0][:-3] + '.las'
+    pt = load_las(fn)
+
+    nreps = 10
+    st = np.zeros((nreps, 2))
+    nr = np.logspace(3, np.log10(pt.shape[0]), 10).astype('int')
+    kr = [10, 50, 100]
+    lr = [8, 16, 32]
+    jr = [8,]
+    dt = np.zeros((len(nr), len(kr), len(lr), len(jr), 4))
+    for ni, n in enumerate(nr):
+        for ki, k in enumerate(kr):
+            for li, l in enumerate(lr):
+                for ij, j in enumerate(jr):
+                    for i in range(nreps):
+                        s, t = time_kdtree(pt, n, k, l, j)
+                        rs = (n, k, l, j, i, s, t)
+                        print('n=%04d, k=%04d, leafsize=%2d, n_jobs=%02d, repeat=%i, t_create=%.4f, t_query=%.3f' % rs)
+                        st[i, 0] = s
+                        st[i, 1] = t
+                    dt[ni, ki, li, ij, :] = (st[:,0].mean(), st[:,0].std(), st[:,1].mean(), st[:,1].std())
+
+    fg, ax = pl.subplots(1, 2, figsize = (19.2, 10.8))
+    ax[0].set_title('create')
+    ax[1].set_title('query')
+    for ki, k in enumerate(kr):
+        for li, l in enumerate(lr):
+            for ij, j in enumerate(jr):
+                dtcm = dt[:, ki, li, ij, 0]
+                dtcs = dt[:, ki, li, ij, 1]
+                dtqm = dt[:, ki, li, ij, 2]
+                dtqs = dt[:, ki, li, ij, 3]
+                ax[0].loglog(nr, dtcm, 'o-', mfc = 'none', label = 'k=%i, leafsize=%i, n_jobs=%i' % (k, l, j))
+                ax[0].fill_between(nr, dtcm - dtcs, dtcm + dtcs, alpha = 0.2)
+                ax[1].loglog(nr, dtqm, 'o-', mfc = 'none', label = 'k=%i, leafsize=%i, n_jobs=%i' % (k, l, j))
+                ax[1].fill_between(nr, dtqm - dtqs, dtqm + dtqs, alpha = 0.2)
+
+    ax[0].set_xlabel('number of points')
+    ax[1].set_xlabel('number of points')
+    ax[0].set_ylabel('time [s]')
+    ax[1].set_ylabel('time [s]')
+    ax[0].legend()
+    ax[1].legend()
+    ax[0].grid()
+    ax[1].grid()
+    pl.savefig('%s.png' % sys.argv[0][:-3])
+```
+
+Pozo_WestCanada_clg_jobs.py:
+```python
+import sys
+import numpy as np
+import laspy as lp
+
+from time import time
+from scipy.spatial import cKDTree as kdtree
+from matplotlib import pyplot as pl
+
+def load_las(fn):
+    with lp.file.File(fn) as fp:
+        pt = np.c_[fp.x, fp.y, fp.z]
+
+    return pt
+
+def time_kdtree(pt, k, leafsize, n_jobs):
+    t0 = time()
+    tr = kdtree(pt, leafsize = leafsize)
+    t1 = time()
+    tr.query(pt, k = k, n_jobs = n_jobs)
+    t2 = time()
+    return (t1 - t0, t2 - t1)
+
+if __name__ == '__main__':
+    fn = sys.argv[0][:-8] + '.las'
+    pt = load_las(fn)
+
+    nreps = 10
+    st = np.zeros((nreps, 2))
+    kr = [10, 50, 100]
+    lr = [4, 8, 16]
+    jr = [1, 2, 4, 8]
+    dt = np.zeros((len(kr), len(lr), len(jr), 4))
+    for ki, k in enumerate(kr):
+        for li, l in enumerate(lr):
+            for ij, j in enumerate(jr):
+                for i in range(nreps):
+                    s, t = time_kdtree(pt, k, l, j)
+                    rs = (k, l, j, i, s, t)
+                    print('k=%04d, leafsize=%2d, n_jobs=%02d, repeat=%i, t_create=%.4f, t_query=%.3f' % rs)
+                    st[i, 0] = s
+                    st[i, 1] = t
+                dt[ki, li, ij, :] = (st[:,0].mean(), st[:,0].std(), st[:,1].mean(), st[:,1].std())
+
+    fg, ax = pl.subplots(1, 2, figsize = (19.2, 10.8))
+    ax[0].set_title('create')
+    ax[1].set_title('query')
+    for ki, k in enumerate(kr):
+        for li, l in enumerate(lr):
+            dtcm = dt[ki, li, :, 0]
+            dtcs = dt[ki, li, :, 1]
+            dtqm = dt[ki, li, :, 2]
+            dtqs = dt[ki, li, :, 3]
+            ax[0].plot(jr, dtcm, 'o-', mfc = 'none', label = 'k=%i, leafsize=%i' % (k, l))
+            ax[0].fill_between(jr, dtcm - dtcs, dtcm + dtcs, alpha = 0.2)
+            ax[1].plot(jr, dtqm, 'o-', mfc = 'none', label = 'k=%i, leafsize=%i' % (k, l))
+            ax[1].fill_between(jr, dtqm - dtqs, dtqm + dtqs, alpha = 0.2)
+
+    ax[0].set_xlabel('number of threads')
+    ax[1].set_xlabel('number of threads')
+    ax[0].set_ylabel('time [s]')
+    ax[1].set_ylabel('time [s]')
+    ax[0].legend()
+    ax[1].legend()
+    ax[0].grid()
+    ax[1].grid()
+    pl.savefig('%s.png' % sys.argv[0][:-3])
+```
